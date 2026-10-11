@@ -1,0 +1,20 @@
+:root {
+  --color-bg: #F5F7F4;
+  --color-surface: #FFFFFF;
+  --color-line: #D5DBD3;
+  --color-ink: #1C2430;
+  --color-ink-muted: #556070;
+  --color-primary: #1E4B7A;
+  --color-primary-pressed: #163A5F;
+  --color-primary-soft: #E6EDF5;
+  --color-honey: #F2A900;
+  --color-honey-edge: #8A5A00;
+  --color-safe: #1E7B4C;
+  --color-safe-soft: #E1F1E8;
+  --color-watch: #A94F00;
+  --color-watch-soft: #FCEBD7;
+  --color-critical: #B3261E;
+  --color-critical-soft: #FBE3E0;
+  --color-info: #4A5A73;
+  --color-info-soft: #E8ECF2;
+}
