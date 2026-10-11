@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { authRoutes } from "./modules/m1-auth/routes";
 import { telemetryRoutes } from "./modules/m3-telemetry/routes";
 import { harvestRoutes } from "./modules/m7-harvest/routes";
 import { batchRoutes } from "./modules/m8-batches/routes";
@@ -13,6 +14,7 @@ const app = new Hono();
 app.use("*", logger());
 app.use("*", cors());
 
+app.route("/api/v1", authRoutes);
 app.route("/api/v1", telemetryRoutes);
 app.route("/api/v1", harvestRoutes);
 app.route("/api/v1", batchRoutes);
