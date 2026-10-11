@@ -72,6 +72,18 @@
         "typescript": "^5.7.0",
       },
     },
+    "tools": {
+      "name": "@honeychain/tools",
+      "version": "1.0.0",
+      "dependencies": {
+        "@honeychain/api": "workspace:*",
+        "@honeychain/shared": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^24.14.0",
+        "typescript": "^5.7.0",
+      },
+    },
   },
   "packages": {
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
@@ -167,6 +179,8 @@
     "@honeychain/api": ["@honeychain/api@workspace:apps/api"],
 
     "@honeychain/shared": ["@honeychain/shared@workspace:packages/shared"],
+
+    "@honeychain/tools": ["@honeychain/tools@workspace:tools"],
 
     "@honeychain/ui": ["@honeychain/ui@workspace:packages/ui"],
 

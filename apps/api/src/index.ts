@@ -29,5 +29,7 @@ app.get("/api/v1/health", (c) => {
   });
 });
 
+export { app };
+export * from "./modules/m11-tags/virtual-crypto";
 export default app;
 
