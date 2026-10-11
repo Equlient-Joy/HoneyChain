@@ -1,35 +1,54 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { HoneyCell, StatusChip } from "@honeychain/ui";
-import { Layers, Droplets, Package, Store, AlertTriangle } from "lucide-react";
-import { useDemo } from "../../context/DemoContext";
+import { AlertTriangle, Plus, ChevronRight } from "lucide-react";
+
+export interface HiveItem {
+  code: string;
+  gain: string;
+  status: "Healthy" | "Attention" | "Critical";
+  fill: number;
+  species: string;
+}
+
+export interface HiveAlert {
+  id: string;
+  type: "mite" | "swarm" | "heat" | "syrup";
+  title: string;
+  description: string;
+  severity: "warning" | "critical";
+}
+
+const defaultHives: HiveItem[] = [
+  { code: "Hive #12", gain: "+1.2 kg", status: "Healthy", fill: 58, species: "Indian (Cerana)" },
+  { code: "Hive #9", gain: "+1.1 kg", status: "Healthy", fill: 40, species: "Italian (Mellifera)" },
+  { code: "Hive #3", gain: "+0.9 kg", status: "Healthy", fill: 35, species: "Indian (Cerana)" },
+];
+
+const defaultAlerts: HiveAlert[] = [
+  {
+    id: "mite-alert",
+    type: "mite",
+    title: "(!) Watch: Hive #7 - Mite risk detected. Check the sticky board today.",
+    description: "Sensor telemetry detected abnormal vibration pattern.",
+    severity: "warning",
+  },
+];
 
 export const HivesList: React.FC = () => {
-  const { hives, alerts, syrupQuarantineActive } = useDemo();
+  const [hives] = useState<HiveItem[]>(defaultHives);
+  const [alerts] = useState<HiveAlert[]>(defaultAlerts);
+  const [syrupQuarantineActive] = useState(false);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen flex flex-col bg-[#F5F7F4] text-[#1C2430]">
-      {/* Top Header */}
-      <header className="p-4 bg-white border-b border-[#D5DBD3] flex items-center justify-between sticky top-[33px] z-40">
-        <div>
-          <h1 className="text-xl font-bold text-[#1E4B7A] tracking-tight">HoneyChain</h1>
-          <p className="text-xs text-gray-500 font-medium">Audit-Ready Traceability</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold bg-[#E6EDF5] text-[#1E4B7A] px-2.5 py-1 rounded-full border border-[#1E4B7A]/20">
-            Kanchipuram TN
-          </span>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 p-4 space-y-4 pb-24">
-        {/* Active Alert Banners (Mite Risk, Swarm Anomaly, Heat Stress, Syrup Anomaly) */}
-        <div className="space-y-2">
+    <div className="space-y-6">
+      {/* Active Alert Banners (Mite Risk, Swarm Anomaly, Heat Stress, Syrup Anomaly) */}
+      {alerts.length > 0 || syrupQuarantineActive ? (
+        <div className="space-y-3">
           {alerts.map((a) => (
             <div
               key={a.id}
-              className={`p-3.5 rounded-xl shadow-xs flex items-start gap-2.5 border-l-4 ${
+              className={`p-4 rounded-2xl shadow-xs flex items-start gap-3 border-l-4 ${
                 a.severity === "critical"
                   ? "bg-[#FBE3E0] border-[#B3261E] text-[#B3261E]"
                   : "bg-[#FCEBD7] border-[#A94F00] text-[#A94F00]"
@@ -43,7 +62,7 @@ export const HivesList: React.FC = () => {
               <div>
                 <div className="font-bold text-sm">{a.title}</div>
                 <div
-                  className={`text-xs mt-0.5 ${
+                  className={`text-xs mt-1 ${
                     a.severity === "critical" ? "text-[#B3261E]/90" : "text-[#A94F00]/90"
                   }`}
                 >
@@ -54,55 +73,87 @@ export const HivesList: React.FC = () => {
           ))}
 
           {syrupQuarantineActive && (
-            <div className="p-3.5 bg-[#FBE3E0] border-l-4 border-[#B3261E] rounded-xl text-[#B3261E] shadow-xs flex items-start gap-2.5">
+            <div className="p-4 bg-[#FBE3E0] border-l-4 border-[#B3261E] rounded-2xl text-[#B3261E] shadow-xs flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-[#B3261E]" />
               <div>
                 <div className="font-bold text-sm">(!) Quarantine: Batch HC-0421 Locked</div>
-                <div className="text-xs text-[#B3261E]/90 mt-0.5">
+                <div className="text-xs text-[#B3261E]/90 mt-1">
                   Syrup fraud risk flagged by yield ratio validator. Custody transfers frozen until lab clearance.
                 </div>
               </div>
             </div>
           )}
         </div>
+      ) : null}
 
-        {/* Action shortcut banner */}
-        <div className="bg-[#E6EDF5] p-3 rounded-xl border border-[#1E4B7A]/20 flex items-center justify-between">
-          <div>
-            <div className="text-xs font-semibold text-[#1E4B7A] uppercase tracking-wider">Ready for Harvest</div>
-            <div className="text-sm font-bold text-[#1C2430]">Batch HC-0421 Pending</div>
+      {/* Action shortcut banner */}
+      <div className="bg-gradient-to-r from-[#E6EDF5] to-white p-5 rounded-2xl border border-[#1E4B7A]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div>
+          <div className="text-xs font-bold text-[#1E4B7A] uppercase tracking-wider">
+            Ready for Harvest
           </div>
+          <div className="text-base font-bold text-[#1C2430] mt-0.5">
+            Batch HC-0421 Extraction Ready
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Apiary yields meet minimum capping and moisture criteria.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/farmer/harvest"
+            className="px-4 py-2 bg-white text-[#1E4B7A] border border-[#1E4B7A]/30 text-xs font-bold rounded-xl hover:bg-[#E6EDF5] transition"
+          >
+            Start Harvest
+          </Link>
           <Link
             to="/farmer/batches/new"
-            className="px-3 py-1.5 bg-[#1E4B7A] text-white text-xs font-semibold rounded-lg hover:bg-[#163A5F] transition"
+            className="px-4 py-2 bg-[#1E4B7A] text-white text-xs font-bold rounded-xl hover:bg-[#163A5F] transition flex items-center gap-1.5"
           >
-            Create Batch
+            <Plus className="w-4 h-4" />
+            <span>Create Batch</span>
           </Link>
         </div>
+      </div>
 
-        {/* Hives List Section */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold text-gray-600 uppercase tracking-wider">All Hives (3 active)</h2>
-            <span className="text-xs text-gray-500">Live scale weight</span>
+      {/* Hives List Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-[#1C2430] uppercase tracking-wider">
+              Active Apiary Hives ({hives.length} active)
+            </h2>
+            <p className="text-xs text-gray-500">Live scale weight telemetry & comb fill status</p>
           </div>
+          <span className="text-xs font-semibold text-[#1E7B4C] bg-[#E1F1E8] px-2.5 py-1 rounded-full border border-[#1E7B4C]/20">
+            Realtime LoRaWAN Sync
+          </span>
+        </div>
 
+        {/* Responsive Grid for Hives on Desktop and Tablet */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {hives.map((h) => (
             <div
               key={h.code}
-              className="p-4 bg-white border border-[#D5DBD3] rounded-2xl flex items-center justify-between shadow-xs hover:border-[#1E4B7A]/40 transition"
+              className="p-5 bg-white border border-[#D5DBD3] rounded-2xl flex items-center justify-between shadow-xs hover:border-[#1E4B7A]/40 transition hover:shadow-sm"
             >
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-base text-[#1C2430]">{h.code}</span>
+                  <span className="font-bold text-lg text-[#1C2430]">{h.code}</span>
                   <StatusChip
-                    status={h.status === "Healthy" ? "safe" : h.status === "Critical" ? "critical" : "warning"}
+                    status={
+                      h.status === "Healthy"
+                        ? "safe"
+                        : h.status === "Critical"
+                        ? "critical"
+                        : "warning"
+                    }
                     label={h.status}
                   />
                 </div>
                 <div className="text-xs text-gray-500 font-medium">{h.species}</div>
                 <div
-                  className={`text-xl font-bold mt-0.5 ${
+                  className={`text-xl font-black mt-1 ${
                     h.status === "Critical" ? "text-[#B3261E]" : "text-[#1E7B4C]"
                   }`}
                 >
@@ -110,49 +161,14 @@ export const HivesList: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col items-center gap-1">
-                <HoneyCell fillPct={h.fill} label={h.code} size={52} />
-                <span className="text-[11px] font-semibold text-gray-500">{h.fill}% full</span>
+              <div className="flex flex-col items-center gap-1.5">
+                <HoneyCell fillPct={h.fill} label={h.code} size={58} />
+                <span className="text-xs font-bold text-gray-600">{h.fill}% full</span>
               </div>
             </div>
           ))}
         </div>
-      </main>
-
-      {/* Bottom Navigation matching Screen 1 */}
-      <nav
-        aria-label="Bottom Navigation"
-        className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-[#D5DBD3] px-3 py-2 flex justify-around items-center z-40"
-      >
-        <Link
-          to="/"
-          className="flex flex-col items-center gap-1 text-[#1E4B7A] font-bold text-xs"
-        >
-          <Layers className="w-5 h-5 text-[#1E4B7A]" />
-          <span>Hives</span>
-        </Link>
-        <Link
-          to="/farmer/harvest"
-          className="flex flex-col items-center gap-1 text-gray-500 hover:text-[#1E4B7A] font-medium text-xs transition"
-        >
-          <Droplets className="w-5 h-5" />
-          <span>Harvest</span>
-        </Link>
-        <Link
-          to="/farmer/batches/new"
-          className="flex flex-col items-center gap-1 text-gray-500 hover:text-[#1E4B7A] font-medium text-xs transition"
-        >
-          <Package className="w-5 h-5" />
-          <span>Batches</span>
-        </Link>
-        <Link
-          to="/farmer/market"
-          className="flex flex-col items-center gap-1 text-gray-500 hover:text-[#1E4B7A] font-medium text-xs transition"
-        >
-          <Store className="w-5 h-5" />
-          <span>Market</span>
-        </Link>
-      </nav>
+      </div>
     </div>
   );
 };

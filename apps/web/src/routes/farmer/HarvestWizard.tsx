@@ -204,8 +204,8 @@ export const HarvestWizard: React.FC = () => {
   // Render Success Screen
   if (isSubmitted) {
     return (
-      <div className="max-w-md mx-auto min-h-screen flex flex-col bg-[#F5F7F4] text-[#1C2430]">
-        <div className="p-4 bg-white border-b border-[#D5DBD3] flex items-center justify-between sticky top-[33px] z-40">
+      <div className="max-w-2xl mx-auto flex flex-col text-[#1C2430]">
+        <div className="p-4 bg-white border border-[#D5DBD3] rounded-2xl flex items-center justify-between mb-4 shadow-2xs">
           <h1 className="text-lg font-bold text-[#1E4B7A]">Harvest Complete</h1>
           <StatusChip status="safe" label="Verified" />
         </div>
@@ -270,9 +270,9 @@ export const HarvestWizard: React.FC = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto min-h-screen flex flex-col bg-[#F5F7F4] text-[#1C2430]">
-      {/* Sticky Top Header */}
-      <header className="bg-white border-b border-[#D5DBD3] sticky top-[33px] z-40 shadow-xs">
+    <div className="max-w-2xl mx-auto flex flex-col text-[#1C2430]">
+      {/* Top Header */}
+      <header className="bg-white border border-[#D5DBD3] rounded-2xl mb-4 shadow-2xs">
         <div className="p-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <button

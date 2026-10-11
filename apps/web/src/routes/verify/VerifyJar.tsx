@@ -24,9 +24,9 @@ export const VerifyJar: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen flex flex-col bg-[#F5F7F4] text-[#1C2430]">
+    <div className="max-w-2xl mx-auto flex flex-col text-[#1C2430]">
       {/* Top Header */}
-      <header className="p-4 bg-white border-b border-[#D5DBD3] flex items-center justify-between sticky top-[33px] z-40">
+      <header className="p-4 bg-white border border-[#D5DBD3] rounded-2xl flex items-center justify-between mb-4 shadow-2xs">
         <div className="flex items-center gap-2">
           <Link
             to="/"
