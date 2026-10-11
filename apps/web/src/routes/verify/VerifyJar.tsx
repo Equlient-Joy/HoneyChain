@@ -1,20 +1,90 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { HoneyCell, StatusChip } from "@honeychain/ui";
-import { CheckCircle2, XCircle, AlertTriangle, ExternalLink, ShieldAlert, ArrowLeft } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  ExternalLink,
+  ShieldAlert,
+  ArrowLeft,
+  Search,
+  RefreshCw,
+  Nfc,
+} from "lucide-react";
+
+export interface VerifyApiResponse {
+  result: "VERIFIED" | "RECORD_ONLY" | "TAMPER_OPEN" | string;
+  batch_code: string;
+  origin_district?: string;
+  harvest_date?: string;
+  moisture_pct?: number;
+  moisture_pass?: boolean;
+  fingerprint?: string;
+  anchored?: boolean;
+  tx_hash?: string;
+  explorer_url?: string;
+  failed_stage?: string;
+  can_buy?: boolean;
+  message?: string;
+  assurance_label?: string;
+  checks?: {
+    hive: string;
+    lab_report: string;
+    jar_sealed: string;
+    store_shelf: string;
+  };
+}
 
 export const VerifyJar: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const codeParam = searchParams.get("code") || "HC-0421";
-  const modeParam = searchParams.get("mode");
+  const modeParam = searchParams.get("mode") || "qr";
   const tapParam = searchParams.get("tap");
+
+  const [inputCode, setInputCode] = useState(codeParam);
+  const [apiData, setApiData] = useState<VerifyApiResponse | null>(null);
+  const [loading, setLoading] = useState(false);
   const [reported, setReported] = useState(false);
 
   const isClonedTag = tapParam === "invalid";
-  const isTampered = codeParam.toUpperCase().includes("0999") || isClonedTag;
-  const currentCode = isTampered && !isClonedTag ? "HC-0999" : codeParam;
+  const isTampered =
+    apiData?.result === "TAMPER_OPEN" ||
+    codeParam.toUpperCase().includes("0999") ||
+    isClonedTag;
+  const currentCode = apiData?.batch_code || (isTampered && !isClonedTag ? "HC-0999" : codeParam);
+
+  const fetchVerification = async (codeToVerify: string) => {
+    setLoading(true);
+    try {
+      const mode = modeParam || "qr";
+      const tap = tapParam || "";
+      const url = `/api/v1/public/verify?code=${encodeURIComponent(codeToVerify)}&mode=${encodeURIComponent(mode)}${tap ? `&tap=${encodeURIComponent(tap)}` : ""}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setApiData(data);
+      }
+    } catch {
+      // Offline fallback: handled by isTampered / heuristic
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVerification(codeParam);
+  }, [codeParam, modeParam, tapParam]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputCode.trim()) return;
+    setSearchParams({ code: inputCode.trim() });
+    setReported(false);
+  };
 
   const setCode = (newCode: string) => {
+    setInputCode(newCode);
     setSearchParams({ code: newCode });
     setReported(false);
   };
@@ -23,9 +93,38 @@ export const VerifyJar: React.FC = () => {
     setReported(true);
   };
 
+  const txUrl =
+    apiData?.explorer_url ||
+    "https://amoy.polygonscan.com/tx/0x9f3a8b22c741e5d9961603baef7d21c21e1a89b76c8e31003f5ad678249a0c";
+  const fingerprint = apiData?.fingerprint || "9f3a...c21e";
+
   return (
-    <div className="max-w-2xl mx-auto flex flex-col text-[#1C2430]">
-      {/* Top Header */}
+    <div className="max-w-2xl mx-auto my-8 px-4 flex flex-col text-[#1C2430]">
+      {/* Search Bar at Top */}
+      <div className="bg-white p-4 rounded-2xl border border-[#D5DBD3] shadow-xs mb-4">
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+            <input
+              type="text"
+              value={inputCode}
+              onChange={(e) => setInputCode(e.target.value)}
+              placeholder="Enter Jar Code or Tap NFC (e.g. HC-0421-0001 or HC-0999-0001)"
+              className="w-full pl-10 pr-3.5 py-2.5 bg-[#F9FAF9] border border-[#D5DBD3] rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#1E4B7A]"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2.5 bg-[#1E4B7A] text-white font-bold rounded-xl text-xs hover:bg-[#163A5F] transition flex items-center gap-1.5 shrink-0"
+          >
+            {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+            <span>Verify</span>
+          </button>
+        </form>
+      </div>
+
+      {/* Top Header Card */}
       <header className="p-4 bg-white border border-[#D5DBD3] rounded-2xl flex items-center justify-between mb-4 shadow-2xs">
         <div className="flex items-center gap-2">
           <Link
@@ -41,7 +140,7 @@ export const VerifyJar: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Screen Toggle for testing */}
+        {/* Quick Demo Toggle */}
         <div className="flex bg-[#F5F7F4] p-1 rounded-lg border border-[#D5DBD3] gap-1 text-xs">
           <button
             onClick={() => setCode("HC-0421")}
@@ -63,7 +162,7 @@ export const VerifyJar: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 space-y-4 pb-12">
+      <main className="flex-1 space-y-4 pb-12">
         {!isTampered ? (
           /* ========================================================
              SCREEN 3: AUTHENTIC HONEY (HC-0421)
@@ -91,15 +190,21 @@ export const VerifyJar: React.FC = () => {
               <div className="grid grid-cols-3 gap-2 text-center pt-1">
                 <div>
                   <div className="text-[11px] text-gray-500">Origin</div>
-                  <div className="text-xs font-bold text-[#1C2430]">Kanchipuram, TN</div>
+                  <div className="text-xs font-bold text-[#1C2430]">
+                    {apiData?.origin_district || "Kanchipuram, TN"}
+                  </div>
                 </div>
                 <div>
                   <div className="text-[11px] text-gray-500">Harvested</div>
-                  <div className="text-xs font-bold text-[#1C2430]">14 Sep 2026</div>
+                  <div className="text-xs font-bold text-[#1C2430]">
+                    {apiData?.harvest_date || "14 Sep 2026"}
+                  </div>
                 </div>
                 <div>
                   <div className="text-[11px] text-gray-500">Moisture</div>
-                  <div className="text-xs font-bold text-[#1E7B4C]">17.8% (pass)</div>
+                  <div className="text-xs font-bold text-[#1E7B4C]">
+                    {apiData?.moisture_pct ?? 17.8}% (pass)
+                  </div>
                 </div>
               </div>
             </div>
@@ -116,7 +221,9 @@ export const VerifyJar: React.FC = () => {
                   <HoneyCell fillPct={100} label="Hive Checked" size={42} showIcon="check" />
                   <div>
                     <div className="text-sm font-bold text-[#1C2430]">Hive checked</div>
-                    <div className="text-xs text-gray-500 font-medium">Sensor verified (IoT scale & vibration)</div>
+                    <div className="text-xs text-gray-500 font-medium">
+                      Sensor verified (IoT scale & vibration)
+                    </div>
                   </div>
                 </div>
                 <StatusChip status="safe" label="Verified" />
@@ -128,7 +235,9 @@ export const VerifyJar: React.FC = () => {
                   <HoneyCell fillPct={100} label="Lab Checked" size={42} showIcon="check" />
                   <div>
                     <div className="text-sm font-bold text-[#1C2430]">Lab report checked</div>
-                    <div className="text-xs text-gray-500 font-medium">FSSAI pass (C4 sugar & moisture compliant)</div>
+                    <div className="text-xs text-gray-500 font-medium">
+                      FSSAI pass (C4 sugar & moisture compliant)
+                    </div>
                   </div>
                 </div>
                 <StatusChip status="safe" label="Passed" />
@@ -140,7 +249,9 @@ export const VerifyJar: React.FC = () => {
                   <HoneyCell fillPct={100} label="Seal Intact" size={42} showIcon="check" />
                   <div>
                     <div className="text-sm font-bold text-[#1C2430]">Jar seal intact</div>
-                    <div className="text-xs text-gray-500 font-medium">NFC verified (NTAG 424 DNA cryptographic tap)</div>
+                    <div className="text-xs text-gray-500 font-medium">
+                      NFC verified (NTAG 424 DNA cryptographic tap)
+                    </div>
                   </div>
                 </div>
                 <StatusChip status="safe" label="Intact" />
@@ -152,7 +263,9 @@ export const VerifyJar: React.FC = () => {
                   <HoneyCell fillPct={100} label="Store Shelf" size={42} showIcon="check" />
                   <div>
                     <div className="text-sm font-bold text-[#1C2430]">Store shelf</div>
-                    <div className="text-xs text-gray-500 font-medium">Retail scan (Custody confirmed)</div>
+                    <div className="text-xs text-gray-500 font-medium">
+                      Retail scan (Custody confirmed)
+                    </div>
                   </div>
                 </div>
                 <StatusChip status="safe" label="Scanned" />
@@ -162,11 +275,12 @@ export const VerifyJar: React.FC = () => {
             {/* Verification and Blockchain Link */}
             <div className="p-4 bg-[#E6EDF5]/60 border border-[#1E4B7A]/20 rounded-2xl text-center space-y-2">
               <p className="text-xs font-semibold text-[#1C2430]">
-                Verified by tapping the jar. Fingerprint 9f3a...c21e
+                {apiData?.assurance_label ||
+                  `Verified by tapping the jar. Fingerprint ${fingerprint}`}
               </p>
               <div>
                 <a
-                  href="https://amoy.polygonscan.com/tx/0x9f3a8b22c741e5d9961603baef7d21c21e1a89b76c8e31003f5ad678249a0c"
+                  href={txUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1E4B7A] hover:underline"
@@ -202,7 +316,9 @@ export const VerifyJar: React.FC = () => {
             {/* Tamper Status Highlights */}
             <div className="p-4 bg-white border border-[#B3261E]/30 rounded-2xl shadow-xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Detection Status</span>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Detection Status
+                </span>
                 <div className="flex gap-1.5">
                   {isClonedTag ? (
                     <>
@@ -223,6 +339,8 @@ export const VerifyJar: React.FC = () => {
                   <ShieldAlert className="w-4 h-4" />
                   {isClonedTag
                     ? "Failed stage: NFC Tag Authentication Failed (Cloned Tag)"
+                    : apiData?.failed_stage
+                    ? `Failed stage: ${apiData.failed_stage}`
                     : "Failed stage: Jar seal broken"}
                 </div>
                 <p className="text-xs text-gray-700">
@@ -236,7 +354,7 @@ export const VerifyJar: React.FC = () => {
               <div className="p-3 bg-[#FCEBD7] border-l-4 border-[#A94F00] rounded-r-xl text-[#A94F00]">
                 <div className="text-xs font-bold flex items-center gap-1.5">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
-                  This jar cannot be verified. Do not buy. Report it.
+                  {apiData?.message || "This jar cannot be verified. Do not buy. Report it."}
                 </div>
               </div>
             </div>

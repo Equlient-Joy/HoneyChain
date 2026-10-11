@@ -1,97 +1,80 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ProtectedRoute, getRoleHomePath } from "./components/auth/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 import { Login } from "./routes/auth/Login";
+import { Signup } from "./routes/auth/Signup";
 import { HivesList } from "./routes/farmer/HivesList";
 import { CreateBatch } from "./routes/farmer/CreateBatch";
-import { VerifyJar } from "./routes/verify/VerifyJar";
 import { HarvestWizard } from "./routes/farmer/HarvestWizard";
+import { AggregatorDashboard } from "./routes/aggregator/AggregatorDashboard";
+import { LabPortal } from "./routes/lab/LabPortal";
+import { RegulatorDashboard } from "./routes/regulator/RegulatorDashboard";
+import { VerifyJar } from "./routes/verify/VerifyJar";
 
-// Persona placeholder views for aggregator, lab, and regulator
-export const AggregatorView: React.FC = () => (
-  <div className="space-y-4">
-    <div className="bg-white p-6 rounded-2xl border border-[#D5DBD3] shadow-xs space-y-3">
-      <div className="text-xs font-bold text-[#1E4B7A] uppercase tracking-wider">Aggregator Intake</div>
-      <h2 className="text-xl font-bold text-[#1C2430]">Cooperative Intake Hub</h2>
-      <p className="text-sm text-gray-600">
-        Scan incoming lot tags from Kanchipuram apiary, verify refractometer moisture, and check tamper-evident seals before custody transfer.
-      </p>
-      <div className="pt-2">
-        <span className="px-3 py-1 bg-[#E6EDF5] text-[#1E4B7A] rounded-lg text-xs font-semibold">
-          FSSAI Lic: 10020042001188
-        </span>
-      </div>
-    </div>
-  </div>
-);
+export {
+  Signup,
+  Login,
+  HivesList,
+  CreateBatch,
+  HarvestWizard,
+  AggregatorDashboard,
+  LabPortal,
+  RegulatorDashboard,
+  VerifyJar,
+};
 
-export const LabView: React.FC = () => (
-  <div className="space-y-4">
-    <div className="bg-white p-6 rounded-2xl border border-[#D5DBD3] shadow-xs space-y-3">
-      <div className="text-xs font-bold text-[#1E4B7A] uppercase tracking-wider">Accredited Testing Lab</div>
-      <h2 className="text-xl font-bold text-[#1C2430]">FSSAI / NABL Testing Portal</h2>
-      <p className="text-sm text-gray-600">
-        Receive sealed duplicate samples, log C4 sugar EA-IRMS analysis, and sign tamper-evident digital certificates for batch HC-0421.
-      </p>
-      <div className="pt-2">
-        <span className="px-3 py-1 bg-[#E1F1E8] text-[#1E7B4C] rounded-lg text-xs font-semibold">
-          NABL ISO/IEC 17025 Accredited
-        </span>
-      </div>
-    </div>
-  </div>
-);
+// Root route handler: redirects authenticated user to role home, otherwise to /login
+export const RootRedirect: React.FC = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
 
-export const RegulatorView: React.FC = () => (
-  <div className="space-y-4">
-    <div className="bg-white p-6 rounded-2xl border border-[#D5DBD3] shadow-xs space-y-3">
-      <div className="text-xs font-bold text-[#B3261E] uppercase tracking-wider">Regulator Audit View</div>
-      <h2 className="text-xl font-bold text-[#1C2430]">FSSAI Enforcement & Audit</h2>
-      <p className="text-sm text-gray-600">
-        Review immutable custody chains, Merkle anchor receipts on Polygon Amoy, and flag tampered unit HC-0999 for field seizure.
-      </p>
-      <div className="pt-2">
-        <span className="px-3 py-1 bg-[#FBE3E0] text-[#B3261E] rounded-lg text-xs font-semibold">
-          National Honey Board Registry Access
-        </span>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7F4]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-[#1E4B7A] border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-medium text-gray-600">Loading HoneyChain...</span>
+        </div>
       </div>
-    </div>
-  </div>
-);
+    );
+  }
+
+  if (isAuthenticated && user) {
+    return <Navigate to={getRoleHomePath(user.role)} replace />;
+  }
+
+  return <Navigate to="/login" replace />;
+};
 
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
-      <Route
-        path="/verify"
-        element={
-          <AppLayout title="Public Verification">
-            <VerifyJar />
-          </AppLayout>
-        }
-      />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/verify" element={<VerifyJar />} />
+
+      {/* Root Home Route */}
+      <Route path="/" element={<RootRedirect />} />
 
       {/* Farmer Routes */}
       <Route
-        path="/"
+        path="/farmer/hives"
         element={
           <ProtectedRoute allowedRoles={["farmer"]}>
-            <AppLayout title="Hives & Apiary Telemetry">
+            <AppLayout title="My Hives">
               <HivesList />
             </AppLayout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/farmer/hives"
+        path="/farmer/harvest"
         element={
           <ProtectedRoute allowedRoles={["farmer"]}>
-            <AppLayout title="Hives & Apiary Telemetry">
-              <HivesList />
+            <AppLayout title="Harvest Wizard">
+              <HarvestWizard />
             </AppLayout>
           </ProtectedRoute>
         }
@@ -100,17 +83,7 @@ export const AppRoutes: React.FC = () => {
         path="/farmer/batches/new"
         element={
           <ProtectedRoute allowedRoles={["farmer"]}>
-            <AppLayout title="Create Packaging Batch">
-              <CreateBatch />
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/farmer/batch"
-        element={
-          <ProtectedRoute allowedRoles={["farmer"]}>
-            <AppLayout title="Batch Management">
+            <AppLayout title="Batches">
               <CreateBatch />
             </AppLayout>
           </ProtectedRoute>
@@ -120,18 +93,18 @@ export const AppRoutes: React.FC = () => {
         path="/farmer/batches"
         element={
           <ProtectedRoute allowedRoles={["farmer"]}>
-            <AppLayout title="Batch Management">
+            <AppLayout title="Batches">
               <CreateBatch />
             </AppLayout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/farmer/harvest"
+        path="/farmer/batch"
         element={
           <ProtectedRoute allowedRoles={["farmer"]}>
-            <AppLayout title="Harvest Logging">
-              <HarvestWizard />
+            <AppLayout title="Batches">
+              <CreateBatch />
             </AppLayout>
           </ProtectedRoute>
         }
@@ -140,7 +113,7 @@ export const AppRoutes: React.FC = () => {
         path="/farmer/market"
         element={
           <ProtectedRoute allowedRoles={["farmer"]}>
-            <AppLayout title="Honey Market & Inventory">
+            <AppLayout title="Marketplace">
               <HivesList />
             </AppLayout>
           </ProtectedRoute>
@@ -152,8 +125,18 @@ export const AppRoutes: React.FC = () => {
         path="/aggregator"
         element={
           <ProtectedRoute allowedRoles={["aggregator"]}>
-            <AppLayout title="Aggregator Intake & Custody">
-              <AggregatorView />
+            <AppLayout title="Aggregator Intake">
+              <AggregatorDashboard />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/aggregator/batches"
+        element={
+          <ProtectedRoute allowedRoles={["aggregator"]}>
+            <AppLayout title="Aggregator Intake">
+              <AggregatorDashboard />
             </AppLayout>
           </ProtectedRoute>
         }
@@ -164,8 +147,18 @@ export const AppRoutes: React.FC = () => {
         path="/lab"
         element={
           <ProtectedRoute allowedRoles={["lab"]}>
-            <AppLayout title="Testing Lab Portal">
-              <LabView />
+            <AppLayout title="Lab Testing Portal">
+              <LabPortal />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lab/reports"
+        element={
+          <ProtectedRoute allowedRoles={["lab"]}>
+            <AppLayout title="Lab Testing Portal">
+              <LabPortal />
             </AppLayout>
           </ProtectedRoute>
         }
@@ -176,8 +169,18 @@ export const AppRoutes: React.FC = () => {
         path="/regulator"
         element={
           <ProtectedRoute allowedRoles={["regulator"]}>
-            <AppLayout title="Regulatory Oversight & Audit">
-              <RegulatorView />
+            <AppLayout title="Regulator & KVK Audit">
+              <RegulatorDashboard />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/regulator/audit"
+        element={
+          <ProtectedRoute allowedRoles={["regulator"]}>
+            <AppLayout title="Regulator & KVK Audit">
+              <RegulatorDashboard />
             </AppLayout>
           </ProtectedRoute>
         }

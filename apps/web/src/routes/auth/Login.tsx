@@ -161,13 +161,23 @@ export const Login: React.FC = () => {
             </button>
           </form>
 
-          <div className="text-center pt-2">
-            <span className="text-xs text-gray-500">
-              Need to verify a retail jar?{" "}
-              <a href="/verify" className="text-[#1E4B7A] font-bold hover:underline">
-                Public Consumer Verification
-              </a>
-            </span>
+          <div className="text-center pt-2 space-y-2">
+            <div>
+              <span className="text-xs text-gray-500">
+                New to HoneyChain?{" "}
+                <a href="/signup" className="text-[#1E4B7A] font-bold hover:underline">
+                  Create an account
+                </a>
+              </span>
+            </div>
+            <div>
+              <span className="text-xs text-gray-500">
+                Need to verify a retail jar?{" "}
+                <a href="/verify" className="text-[#1E4B7A] font-bold hover:underline">
+                  Public Consumer Verification
+                </a>
+              </span>
+            </div>
           </div>
         </div>
       </div>
