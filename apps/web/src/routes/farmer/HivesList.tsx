@@ -2,13 +2,10 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { HoneyCell, StatusChip } from "@honeychain/ui";
 import { Layers, Droplets, Package, Store, AlertTriangle } from "lucide-react";
+import { useDemo } from "../../context/DemoContext";
 
 export const HivesList: React.FC = () => {
-  const hives = [
-    { code: "Hive #12", gain: "+1.8 kg", status: "Healthy" as const, fill: 62, species: "Indian (Cerana)" },
-    { code: "Hive #9", gain: "+1.1 kg", status: "Healthy" as const, fill: 40, species: "Italian (Mellifera)" },
-    { code: "Hive #3", gain: "+0.9 kg", status: "Healthy" as const, fill: 35, species: "Indian (Cerana)" }
-  ];
+  const { hives, alerts, syrupQuarantineActive } = useDemo();
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col bg-[#F5F7F4] text-[#1C2430]">
@@ -27,13 +24,46 @@ export const HivesList: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 p-4 space-y-4 pb-24">
-        {/* Mite Risk Alert Banner */}
-        <div className="p-3.5 bg-[#FCEBD7] border-l-4 border-[#A94F00] rounded-xl text-[#A94F00] shadow-xs flex items-start gap-2.5">
-          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-[#A94F00]" />
-          <div>
-            <div className="font-bold text-sm">(!) Watch: Hive #7 - Mite risk detected. Check the sticky board today.</div>
-            <div className="text-xs text-[#A94F00]/90 mt-0.5">Sensor telemetry detected abnormal vibration pattern.</div>
-          </div>
+        {/* Active Alert Banners (Mite Risk, Swarm Anomaly, Heat Stress, Syrup Anomaly) */}
+        <div className="space-y-2">
+          {alerts.map((a) => (
+            <div
+              key={a.id}
+              className={`p-3.5 rounded-xl shadow-xs flex items-start gap-2.5 border-l-4 ${
+                a.severity === "critical"
+                  ? "bg-[#FBE3E0] border-[#B3261E] text-[#B3261E]"
+                  : "bg-[#FCEBD7] border-[#A94F00] text-[#A94F00]"
+              }`}
+            >
+              <AlertTriangle
+                className={`w-5 h-5 shrink-0 mt-0.5 ${
+                  a.severity === "critical" ? "text-[#B3261E]" : "text-[#A94F00]"
+                }`}
+              />
+              <div>
+                <div className="font-bold text-sm">{a.title}</div>
+                <div
+                  className={`text-xs mt-0.5 ${
+                    a.severity === "critical" ? "text-[#B3261E]/90" : "text-[#A94F00]/90"
+                  }`}
+                >
+                  {a.description}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {syrupQuarantineActive && (
+            <div className="p-3.5 bg-[#FBE3E0] border-l-4 border-[#B3261E] rounded-xl text-[#B3261E] shadow-xs flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-[#B3261E]" />
+              <div>
+                <div className="font-bold text-sm">(!) Quarantine: Batch HC-0421 Locked</div>
+                <div className="text-xs text-[#B3261E]/90 mt-0.5">
+                  Syrup fraud risk flagged by yield ratio validator. Custody transfers frozen until lab clearance.
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action shortcut banner */}
@@ -65,10 +95,19 @@ export const HivesList: React.FC = () => {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-base text-[#1C2430]">{h.code}</span>
-                  <StatusChip status="safe" label="Healthy" />
+                  <StatusChip
+                    status={h.status === "Healthy" ? "safe" : h.status === "Critical" ? "critical" : "warning"}
+                    label={h.status}
+                  />
                 </div>
                 <div className="text-xs text-gray-500 font-medium">{h.species}</div>
-                <div className="text-xl font-bold text-[#1E7B4C] mt-0.5">{h.gain} today</div>
+                <div
+                  className={`text-xl font-bold mt-0.5 ${
+                    h.status === "Critical" ? "text-[#B3261E]" : "text-[#1E7B4C]"
+                  }`}
+                >
+                  {h.gain} today
+                </div>
               </div>
 
               <div className="flex flex-col items-center gap-1">

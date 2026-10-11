@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { DemoBar, Persona } from "./components/DemoBar";
+import { DemoScenarioDrawer } from "./components/DemoScenarioDrawer";
+import { DemoProvider } from "./context/DemoContext";
 import { HivesList } from "./routes/farmer/HivesList";
 import { CreateBatch } from "./routes/farmer/CreateBatch";
 import { VerifyJar } from "./routes/verify/VerifyJar";
@@ -118,6 +120,7 @@ const AppContent: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+      <DemoScenarioDrawer />
     </div>
   );
 };
@@ -125,7 +128,9 @@ const AppContent: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AppContent />
+      <DemoProvider>
+        <AppContent />
+      </DemoProvider>
     </BrowserRouter>
   );
 };

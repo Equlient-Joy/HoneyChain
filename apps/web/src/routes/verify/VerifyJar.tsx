@@ -6,10 +6,13 @@ import { CheckCircle2, XCircle, AlertTriangle, ExternalLink, ShieldAlert, ArrowL
 export const VerifyJar: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const codeParam = searchParams.get("code") || "HC-0421";
+  const modeParam = searchParams.get("mode");
+  const tapParam = searchParams.get("tap");
   const [reported, setReported] = useState(false);
 
-  const isTampered = codeParam.toUpperCase().includes("0999");
-  const currentCode = isTampered ? "HC-0999" : "HC-0421";
+  const isClonedTag = tapParam === "invalid";
+  const isTampered = codeParam.toUpperCase().includes("0999") || isClonedTag;
+  const currentCode = isTampered && !isClonedTag ? "HC-0999" : codeParam;
 
   const setCode = (newCode: string) => {
     setSearchParams({ code: newCode });
@@ -185,9 +188,13 @@ export const VerifyJar: React.FC = () => {
                 <XCircle className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-[#B3261E]">(✗) Tampered or fake</h2>
+                <h2 className="text-lg font-black text-[#B3261E]">
+                  {isClonedTag ? "(✗) Cloned NFC Tag Detected" : "(✗) Tampered or fake"}
+                </h2>
                 <p className="text-xs text-[#B3261E]/90 font-medium">
-                  Integrity breach detected in physical seal or ledger hash
+                  {isClonedTag
+                    ? "Cryptographic CMAC mismatch or replayed tap counter (COUNTER_REPLAY)"
+                    : "Integrity breach detected in physical seal or ledger hash"}
                 </p>
               </div>
             </div>
@@ -197,18 +204,31 @@ export const VerifyJar: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Detection Status</span>
                 <div className="flex gap-1.5">
-                  <StatusChip status="critical" label="Hash mismatch" />
-                  <StatusChip status="critical" label="Seal broken" />
+                  {isClonedTag ? (
+                    <>
+                      <StatusChip status="critical" label="Counter replay" />
+                      <StatusChip status="critical" label="Invalid CMAC" />
+                    </>
+                  ) : (
+                    <>
+                      <StatusChip status="critical" label="Hash mismatch" />
+                      <StatusChip status="critical" label="Seal broken" />
+                    </>
+                  )}
                 </div>
               </div>
 
               <div className="p-3 bg-[#FBE3E0]/50 rounded-xl border border-[#B3261E]/20 space-y-1">
                 <div className="text-xs font-bold text-[#B3261E] flex items-center gap-1.5">
                   <ShieldAlert className="w-4 h-4" />
-                  Failed stage: Jar seal broken
+                  {isClonedTag
+                    ? "Failed stage: NFC Tag Authentication Failed (Cloned Tag)"
+                    : "Failed stage: Jar seal broken"}
                 </div>
                 <p className="text-xs text-gray-700">
-                  NTAG 424 tamper loop was opened or cryptographic signature does not match canonical root hash.
+                  {isClonedTag
+                    ? "Virtual NTAG 424 DNA Sun mirror verification rejected. Tap counter was lower than or equal to last recorded counter, or AES-128 CMAC was counterfeit."
+                    : "NTAG 424 tamper loop was opened or cryptographic signature does not match canonical root hash."}
                 </p>
               </div>
 
