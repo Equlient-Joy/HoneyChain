@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "dev:api": "bun --watch apps/api/src/index.ts",
-    "dev:web": "bun --filter web dev",
+    "dev:web": "bun --filter @honeychain/web dev",
+    "build:web": "bun --filter @honeychain/web build",
     "dev": "bun --filter \"*\" dev",
     "build": "bun --filter \"*\" build",
     "test": "bun test",

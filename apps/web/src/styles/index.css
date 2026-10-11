@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "@honeychain/ui/src/styles/theme.css";
+
+body {
+  background-color: var(--color-bg, #F5F7F4);
+  color: var(--color-ink, #1C2430);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
