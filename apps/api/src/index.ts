@@ -6,6 +6,7 @@ import { harvestRoutes } from "./modules/m7-harvest/routes";
 import { batchRoutes } from "./modules/m8-batches/routes";
 import { labRoutes } from "./modules/m9-labs/routes";
 import { packagingRoutes } from "./modules/m10-packaging/routes";
+import { verificationRoutes } from "./modules/m12-verification/routes";
 
 const app = new Hono();
 
@@ -17,6 +18,7 @@ app.route("/api/v1", harvestRoutes);
 app.route("/api/v1", batchRoutes);
 app.route("/api/v1", labRoutes);
 app.route("/api/v1", packagingRoutes);
+app.route("/api/v1", verificationRoutes);
 
 app.get("/api/v1/health", (c) => {
   return c.json({
