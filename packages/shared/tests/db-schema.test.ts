@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { getTableName } from "drizzle-orm";
 import {
   organisations,
+  users,
   apiaries,
   hives,
   telemetry_logs,
@@ -19,6 +20,7 @@ import {
 describe("Database Schema Tables", () => {
   it("should define and export all core schema tables", () => {
     expect(organisations).toBeDefined();
+    expect(users).toBeDefined();
     expect(apiaries).toBeDefined();
     expect(hives).toBeDefined();
     expect(telemetry_logs).toBeDefined();
@@ -35,6 +37,7 @@ describe("Database Schema Tables", () => {
 
   it("should have correct SQL table names", () => {
     expect(getTableName(organisations)).toBe("organisations");
+    expect(getTableName(users)).toBe("users");
     expect(getTableName(apiaries)).toBe("apiaries");
     expect(getTableName(hives)).toBe("hives");
     expect(getTableName(telemetry_logs)).toBe("telemetry_logs");
@@ -53,6 +56,16 @@ describe("Database Schema Tables", () => {
     expect(organisations.id).toBeDefined();
     expect(organisations.name).toBeDefined();
     expect(organisations.type).toBeDefined();
+
+    expect(users.id).toBeDefined();
+    expect(users.org_id).toBeDefined();
+    expect(users.name).toBeDefined();
+    expect(users.email).toBeDefined();
+    expect(users.phone).toBeDefined();
+    expect(users.password_hash).toBeDefined();
+    expect(users.role).toBeDefined();
+    expect(users.language).toBeDefined();
+    expect(users.created_at).toBeDefined();
 
     expect(hives.id).toBeDefined();
     expect(hives.hive_code).toBeDefined();

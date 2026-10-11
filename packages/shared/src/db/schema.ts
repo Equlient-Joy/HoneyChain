@@ -23,6 +23,18 @@ export const organisations = pgTable("organisations", {
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  org_id: uuid("org_id").notNull().references(() => organisations.id),
+  name: text("name").notNull(),
+  email: text("email").unique(),
+  phone: text("phone").unique(),
+  password_hash: text("password_hash").notNull(),
+  role: text("role").notNull(), // 'farmer' | 'aggregator' | 'lab' | 'regulator' | 'station'
+  language: text("language").notNull().default("en"),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const apiaries = pgTable("apiaries", {
   id: uuid("id").primaryKey().defaultRandom(),
   org_id: uuid("org_id").notNull().references(() => organisations.id),
