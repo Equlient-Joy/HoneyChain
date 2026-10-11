@@ -1,0 +1,23 @@
+{
+  "name": "honeychain",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "dev:api": "bun --watch apps/api/src/index.ts",
+    "dev:web": "bun --filter web dev",
+    "dev": "bun --filter \"*\" dev",
+    "build": "bun --filter \"*\" build",
+    "test": "bun test",
+    "test:scenarios": "bun run tools/scenarios/run.ts",
+    "seed": "bun run tools/seed.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.14.0",
+    "typescript": "^5.7.0"
+  }
+}
