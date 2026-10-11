@@ -27,12 +27,15 @@ export const TelemetryReadingSchema = z.object({
   quality_flags: z.array(z.string()).optional()
 });
 
+const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const IngestionPayloadSchema = z.object({
   schema_version: z.literal("1.0"),
-  message_id: z.string().uuid(),
+  message_id: z.string().regex(uuidRegex, { message: "Invalid UUID format" }),
   gateway_id: z.string().regex(/^GW-[a-zA-Z0-9]+$/),
-  apiary_id: z.string().uuid(),
+  apiary_id: z.string().regex(uuidRegex, { message: "Invalid UUID format" }),
   sent_at: z.string().datetime(),
+
   readings: z.array(TelemetryReadingSchema).min(1).max(64),
   signature: z.object({
     alg: z.literal("ed25519"),
