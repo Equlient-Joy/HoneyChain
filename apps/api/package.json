@@ -1,0 +1,20 @@
+{
+  "name": "@honeychain/api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@honeychain/shared": "workspace:*",
+    "drizzle-orm": "^0.39.0",
+    "hono": "^4.7.0",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.14.0",
+    "typescript": "^5.7.0"
+  }
+}
