@@ -4,6 +4,7 @@ import { DemoBar, Persona } from "./components/DemoBar";
 import { HivesList } from "./routes/farmer/HivesList";
 import { CreateBatch } from "./routes/farmer/CreateBatch";
 import { VerifyJar } from "./routes/verify/VerifyJar";
+import { HarvestWizard } from "./routes/farmer/HarvestWizard";
 
 // Persona placeholder views for aggregator, lab, and regulator
 const AggregatorView: React.FC = () => (
@@ -108,7 +109,7 @@ const AppContent: React.FC = () => {
           <Route path="/farmer/batches/new" element={<CreateBatch />} />
           <Route path="/farmer/batch" element={<CreateBatch />} />
           <Route path="/farmer/batches" element={<CreateBatch />} />
-          <Route path="/farmer/harvest" element={<HivesList />} />
+          <Route path="/farmer/harvest" element={<HarvestWizard />} />
           <Route path="/farmer/market" element={<HivesList />} />
           <Route path="/verify" element={<VerifyJar />} />
           <Route path="/aggregator" element={<AggregatorView />} />
