@@ -6,8 +6,6 @@ import { AuthProvider, SEED_ACCOUNTS } from "../src/context/AuthContext";
 import { Signup } from "../src/routes/auth/Signup";
 import { HivesList } from "../src/routes/farmer/HivesList";
 import { AggregatorDashboard } from "../src/routes/aggregator/AggregatorDashboard";
-import { LabPortal } from "../src/routes/lab/LabPortal";
-import { RegulatorDashboard } from "../src/routes/regulator/RegulatorDashboard";
 import { VerifyJar } from "../src/routes/verify/VerifyJar";
 import { App, AppRoutes } from "../src/App";
 
@@ -24,10 +22,10 @@ describe("Phase 3: Real Responsive Role Dashboards & Live Integration", () => {
     // Form inputs and titles
     expect(html).toContain("Create your account");
     expect(html).toContain("Select Your Role");
-    expect(html).toContain("Beekeeper / Farmer");
-    expect(html).toContain("Aggregator / FPO Hub");
-    expect(html).toContain("Accredited Lab");
-    expect(html).toContain("Regulator / FSSAI / KVK");
+    expect(html).toContain("Beekeeper / Apiary");
+    expect(html).toContain("Aggregator / Coop Packer");
+    expect(html).not.toContain("Accredited Lab");
+    expect(html).not.toContain("Regulator / FSSAI / KVK");
     expect(html).toContain("Full Name");
     expect(html).toContain("Mobile Phone");
     expect(html).toContain("Password");
@@ -52,8 +50,14 @@ describe("Phase 3: Real Responsive Role Dashboards & Live Integration", () => {
     expect(html).toContain("Total Active Hives");
     expect(html).toContain("Daily Yield Gain");
     expect(html).toContain("Forage Flow Status");
-    expect(html).toContain("Strong Spring Flow");
+    expect(html).toContain("High Nectar Flow");
     expect(html).toContain("Active Alerts");
+
+    // Dynamic Harvest Banner and Fraud Prevention Shields
+    expect(html).toContain("Hive #12 Extraction Ready");
+    expect(html).toContain("Yield Ratio Validator");
+    expect(html).toContain("Moisture Adulteration Guard");
+    expect(html).toContain("Cryptographic Weight Attestation");
 
     // Grid and items
     expect(html).toContain("grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6");
@@ -64,6 +68,92 @@ describe("Phase 3: Real Responsive Role Dashboards & Live Integration", () => {
 
     // Add hive action
     expect(html).toContain("Add Hive");
+
+    // Nominal state: 0 active alerts, no fake warning banners
+    expect(html).toContain("All colonies healthy &amp; nominal");
+    expect(html).not.toContain("Hive #7 - Mite risk detected");
+    expect(html).not.toContain("(!) Quarantine: Batch HC-0421 Locked");
+  });
+
+  it("should dynamically render active alerts and forage flows based on live hive telemetry", () => {
+    // Test with flagged hives (Watch / Critical) and maintenance flow (<0.3kg)
+    const flaggedHives = [
+      {
+        id: "hive-007",
+        code: "Hive #7",
+        rawCode: "HV-007",
+        gain: "+0.1 kg",
+        gainKg: 0.1,
+        status: "Watch",
+        fill: 20,
+        species: "Indian (Cerana)",
+        weight: 18.0,
+        alert: "Mite risk detected. Check sticky board today.",
+        harvest_ready: false,
+      },
+      {
+        id: "hive-005",
+        code: "Hive #5",
+        rawCode: "HV-005",
+        gain: "+0.2 kg",
+        gainKg: 0.2,
+        status: "Critical",
+        fill: 15,
+        species: "Italian (Mellifera)",
+        weight: 16.5,
+        alert: "Sudden weight drop detected (possible swarm event).",
+        harvest_ready: false,
+      },
+    ];
+
+    const htmlFlagged = renderToString(
+      <MemoryRouter initialEntries={["/farmer/hives"]}>
+        <AuthProvider initialUser={SEED_ACCOUNTS.farmer.profile} initialToken="mock-token-farmer">
+          <HivesList initialHives={flaggedHives} />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    // Dynamic alerts rendered
+    expect(htmlFlagged).toContain("(!) Watch: Hive #7 - Mite risk detected. Check sticky board today.");
+    expect(htmlFlagged).toContain("(!) Critical: Hive #5 - Sudden weight drop detected (possible swarm event).");
+    expect(htmlFlagged).toContain("Inspect flagged colonies");
+
+    // Forage Flow: Avg gain = 0.15 kg (< 0.3 kg) -> Maintenance Flow
+    expect(htmlFlagged).toContain("Maintenance Flow");
+    expect(htmlFlagged).toContain("Colonies consuming reserves");
+
+    // Harvest readiness: no hive ready -> Production Phase
+    expect(htmlFlagged).toContain("Apiary in Production Phase");
+    expect(htmlFlagged).toContain("Honey supers actively ripening. All colonies currently below extraction weight.");
+    expect(htmlFlagged).not.toContain("Start Harvest");
+
+    // Test moderate forage flow (between 0.3 and 1.0 kg)
+    const moderateHives = [
+      {
+        id: "hive-001",
+        code: "Hive #1",
+        rawCode: "HV-001",
+        gain: "+0.6 kg",
+        gainKg: 0.6,
+        status: "Healthy",
+        fill: 45,
+        species: "Indian (Cerana)",
+        harvest_ready: false,
+      },
+    ];
+
+    const htmlModerate = renderToString(
+      <MemoryRouter initialEntries={["/farmer/hives"]}>
+        <AuthProvider initialUser={SEED_ACCOUNTS.farmer.profile} initialToken="mock-token-farmer">
+          <HivesList initialHives={moderateHives} />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    expect(htmlModerate).toContain("Moderate Nectar Flow");
+    expect(htmlModerate).toContain("Steady comb filling");
+    expect(htmlModerate).toContain("All colonies healthy &amp; nominal");
   });
 
   it("should render AggregatorDashboard with lot intake queue and tag quota calculator", () => {
@@ -82,44 +172,6 @@ describe("Phase 3: Real Responsive Role Dashboards & Live Integration", () => {
     expect(html).toContain("lot-0421");
     expect(html).toContain("14 kg");
     expect(html).toContain("Inspect &amp; Intake");
-  });
-
-  it("should render LabPortal with testing requests inbox and sample UID badges", () => {
-    const html = renderToString(
-      <MemoryRouter initialEntries={["/lab"]}>
-        <AuthProvider initialUser={SEED_ACCOUNTS.lab.profile} initialToken="mock-token-lab">
-          <LabPortal />
-        </AuthProvider>
-      </MemoryRouter>
-    );
-
-    expect(html).toContain("FSSAI / NABL Testing Portal");
-    expect(html).toContain("National Honey Quality Testing Lab");
-    expect(html).toContain("Testing Requests Inbox");
-    expect(html).toContain("SMP-0421");
-    expect(html).toContain("SMP-0422");
-    expect(html).toContain("HC-0421");
-    expect(html).toContain("HC-0422");
-    expect(html).toContain("Intake Vial");
-    expect(html).toContain("Enter Report");
-  });
-
-  it("should render RegulatorDashboard with Madhukranti review queue and audit queue", () => {
-    const html = renderToString(
-      <MemoryRouter initialEntries={["/regulator"]}>
-        <AuthProvider initialUser={SEED_ACCOUNTS.regulator.profile} initialToken="mock-token-regulator">
-          <RegulatorDashboard />
-        </AuthProvider>
-      </MemoryRouter>
-    );
-
-    expect(html).toContain("Madhukranti &amp; Traceability Enforcement Dashboard");
-    expect(html).toContain("Madhukranti Review Queue");
-    expect(html).toContain("Audit &amp; Recall Queue");
-    expect(html).toContain("Salem Non-Compliant Beekeeper");
-    expect(html).toContain("MK-TN-2026-9041");
-    expect(html).toContain("Verify &amp; Approve");
-    expect(html).toContain("Reject");
   });
 
   it("should render VerifyJar with search bar, genuine checks, and tampered view toggles", () => {

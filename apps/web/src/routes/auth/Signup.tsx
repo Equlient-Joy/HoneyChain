@@ -31,27 +31,15 @@ const HoneycombIcon: React.FC<{ className?: string }> = ({ className = "w-10 h-1
 const ROLES: { id: UserRole; title: string; subtitle: string; icon: string }[] = [
   {
     id: "farmer",
-    title: "Beekeeper / Farmer",
-    subtitle: "Log apiary hives, IoT telemetry & honey harvests",
+    title: "Beekeeper / Apiary",
+    subtitle: "Log apiary hives, scale telemetry, harvest extraction & purity",
     icon: "🐝",
   },
   {
     id: "aggregator",
-    title: "Aggregator / FPO Hub",
-    subtitle: "Batch intake, refractometer moisture & custody handoffs",
+    title: "Aggregator / Coop Packer",
+    subtitle: "Batch intake, refractometer adulteration check & custody",
     icon: "📦",
-  },
-  {
-    id: "lab",
-    title: "Accredited Lab",
-    subtitle: "Sample receipt, C4 EA-IRMS testing & digital certificates",
-    icon: "🔬",
-  },
-  {
-    id: "regulator",
-    title: "Regulator / FSSAI / KVK",
-    subtitle: "Madhukranti verification & tamper batch recall audits",
-    icon: "🛡️",
   },
 ];
 

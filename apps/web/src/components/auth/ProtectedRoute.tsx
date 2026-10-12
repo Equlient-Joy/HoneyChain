@@ -13,13 +13,9 @@ export function getRoleHomePath(role: UserRole): string {
       return "/farmer/hives";
     case "aggregator":
       return "/aggregator";
-    case "lab":
-      return "/lab";
-    case "regulator":
-      return "/regulator";
     case "station":
     default:
-      return "/";
+      return "/farmer/hives";
   }
 }
 

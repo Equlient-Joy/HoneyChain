@@ -12,7 +12,7 @@
     "dev:api": "bun --watch apps/api/src/index.ts",
     "dev:web": "bun --filter @honeychain/web dev",
     "build:web": "bun --filter @honeychain/web build",
-    "dev": "bun --filter \"*\" dev",
+    "dev": "concurrently -n \"api,web\" -c \"blue,green\" \"bun run dev:api\" \"bun run dev:web\"",
     "build": "bun --filter \"*\" build",
     "test": "bun test",
     "test:scenarios": "bun run tools/scenarios/run.ts",
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.14.0",
+    "concurrently": "^10.0.6",
     "typescript": "^5.7.0"
   }
 }

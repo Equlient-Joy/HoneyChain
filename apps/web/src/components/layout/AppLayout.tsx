@@ -5,7 +5,6 @@ import {
   Droplets,
   Package,
   FileText,
-  CheckCircle,
   ShieldCheck,
   LogOut,
 } from "lucide-react";
@@ -46,38 +45,22 @@ const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
       { label: "Hives", path: "/farmer/hives", icon: Layers },
       { label: "Harvest", path: "/farmer/harvest", icon: Droplets },
       { label: "Batches", path: "/farmer/batches", icon: Package },
-      { label: "Verify", path: "/verify", icon: ShieldCheck },
+      { label: "Consumer Verify", path: "/verify", icon: ShieldCheck },
     ],
   },
   aggregator: {
     roleLabel: "Aggregator Hub",
     navItems: [
       { label: "Intake Hub", path: "/aggregator", icon: Package },
-      { label: "Custody Lots", path: "/aggregator", icon: FileText },
-      { label: "Verify", path: "/verify", icon: ShieldCheck },
-    ],
-  },
-  lab: {
-    roleLabel: "Testing Lab",
-    navItems: [
-      { label: "Testing Portal", path: "/lab", icon: FileText },
-      { label: "Certificates", path: "/lab", icon: CheckCircle },
-      { label: "Verify", path: "/verify", icon: ShieldCheck },
-    ],
-  },
-  regulator: {
-    roleLabel: "Regulator Audit",
-    navItems: [
-      { label: "Audit Queue", path: "/regulator", icon: ShieldCheck },
-      { label: "Registry Queue", path: "/regulator", icon: FileText },
-      { label: "Verify", path: "/verify", icon: CheckCircle },
+      { label: "Custody Batches", path: "/aggregator/batches", icon: FileText },
+      { label: "Consumer Verify", path: "/verify", icon: ShieldCheck },
     ],
   },
   station: {
     roleLabel: "Honey Station",
     navItems: [
       { label: "Dashboard", path: "/", icon: Layers },
-      { label: "Verify", path: "/verify", icon: ShieldCheck },
+      { label: "Consumer Verify", path: "/verify", icon: ShieldCheck },
     ],
   },
 };
@@ -86,7 +69,7 @@ const DEFAULT_CONFIG: RoleConfig = {
   roleLabel: "HoneyChain Portal",
   navItems: [
     { label: "Dashboard", path: "/", icon: Layers },
-    { label: "Verify", path: "/verify", icon: ShieldCheck },
+    { label: "Consumer Verify", path: "/verify", icon: ShieldCheck },
   ],
 };
 
@@ -104,8 +87,6 @@ function getDefaultTitle(pathname: string): string {
   if (pathname.startsWith("/farmer/batch")) return "Batch Management";
   if (pathname.startsWith("/farmer/market")) return "Honey Market & Inventory";
   if (pathname.startsWith("/aggregator")) return "Aggregator Intake & Custody";
-  if (pathname.startsWith("/lab")) return "Testing Lab Portal";
-  if (pathname.startsWith("/regulator")) return "Regulatory Oversight & Audit";
   if (pathname.startsWith("/verify")) return "Public Traceability Verification";
   return "HoneyChain Platform";
 }

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
-export type UserRole = "farmer" | "aggregator" | "lab" | "regulator" | "station";
+export type UserRole = "farmer" | "aggregator" | "station";
 
 export interface UserProfile {
   id: string;
@@ -51,32 +51,6 @@ export const SEED_ACCOUNTS: Record<string, { profile: UserProfile; password: str
       org_district: "Chennai",
     },
   },
-  lab: {
-    password: "Honey@123",
-    profile: {
-      id: "u-lab-1",
-      name: "Dr. Ananya Rao",
-      email: "lab@honeychain.io",
-      phone: "+919876543230",
-      role: "lab",
-      org_id: "lab1a1a1-4444-4000-8000-000000000004",
-      org_name: "National Honey Quality Testing Lab",
-      org_district: "Chennai",
-    },
-  },
-  regulator: {
-    password: "Honey@123",
-    profile: {
-      id: "u-regulator-1",
-      name: "Dr. R. Sundaram",
-      email: "regulator@honeychain.io",
-      phone: "+919876543240",
-      role: "regulator",
-      org_id: "reg1a1a1-5555-4000-8000-000000000005",
-      org_name: "National Honey Board Inspectorate",
-      org_district: "Tamil Nadu",
-    },
-  },
 };
 
 export function verifySeedCredentials(
@@ -107,12 +81,13 @@ export function verifySeedCredentials(
 }
 
 export function createOfflineFallbackUser(data: any): { user: UserProfile; token: string } {
+  const role: UserRole = data.role === "aggregator" ? "aggregator" : "farmer";
   const fallbackUser: UserProfile = {
     id: `u-${Date.now()}`,
     name: data.name || "New User",
     email: data.email || "",
     phone: data.phone,
-    role: (data.role as UserRole) || "farmer",
+    role,
     org_id: `org-${Date.now()}`,
     org_name: data.org_name || "New Organization",
     org_district: data.district || "Kanchipuram",

@@ -32,7 +32,7 @@ describe("Frontend Auth Context & Responsive Dual Layout (Task B1 & B2)", () => 
     expect(typeof App).toBe("function");
   });
 
-  it("should define SEED_ACCOUNTS for all primary roles with Honey@123 password", () => {
+  it("should define SEED_ACCOUNTS for farmer and aggregator roles with Honey@123 password", () => {
     expect(SEED_ACCOUNTS.farmer).toBeDefined();
     expect(SEED_ACCOUNTS.farmer.profile.role).toBe("farmer");
     expect(SEED_ACCOUNTS.farmer.password).toBe("Honey@123");
@@ -41,21 +41,14 @@ describe("Frontend Auth Context & Responsive Dual Layout (Task B1 & B2)", () => 
     expect(SEED_ACCOUNTS.aggregator.profile.role).toBe("aggregator");
     expect(SEED_ACCOUNTS.aggregator.password).toBe("Honey@123");
 
-    expect(SEED_ACCOUNTS.lab).toBeDefined();
-    expect(SEED_ACCOUNTS.lab.profile.role).toBe("lab");
-    expect(SEED_ACCOUNTS.lab.password).toBe("Honey@123");
-
-    expect(SEED_ACCOUNTS.regulator).toBeDefined();
-    expect(SEED_ACCOUNTS.regulator.profile.role).toBe("regulator");
-    expect(SEED_ACCOUNTS.regulator.password).toBe("Honey@123");
+    expect((SEED_ACCOUNTS as any).lab).toBeUndefined();
+    expect((SEED_ACCOUNTS as any).regulator).toBeUndefined();
   });
 
   it("should compute correct role home paths in getRoleHomePath", () => {
     expect(getRoleHomePath("farmer")).toBe("/farmer/hives");
     expect(getRoleHomePath("aggregator")).toBe("/aggregator");
-    expect(getRoleHomePath("lab")).toBe("/lab");
-    expect(getRoleHomePath("regulator")).toBe("/regulator");
-    expect(getRoleHomePath("station")).toBe("/");
+    expect(getRoleHomePath("station")).toBe("/farmer/hives");
   });
 
   it("should verify seed credentials with email, role, and phone", () => {
@@ -182,10 +175,12 @@ describe("Frontend Auth Context & Responsive Dual Layout (Task B1 & B2)", () => 
 
     expect(html).toContain("HoneyChain");
     expect(html).toContain("Sign In to Portal");
+    expect(html).toContain("Beekeeper");
+    expect(html).toContain("Aggregator");
     expect(html).toContain("Murugan K");
     expect(html).toContain("S. Meenakshi");
-    expect(html).toContain("Dr. Ananya Rao");
-    expect(html).toContain("Dr. R. Sundaram");
+    expect(html).not.toContain("Dr. Ananya Rao");
+    expect(html).not.toContain("Dr. R. Sundaram");
   });
 
   it("should render HivesList with responsive grid and live telemetry", () => {

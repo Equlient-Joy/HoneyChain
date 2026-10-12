@@ -16,13 +16,18 @@ const HoneycombIcon: React.FC<{ className?: string }> = ({ className = "w-10 h-1
   </svg>
 );
 
+const PERSONA_LABELS: Record<string, string> = {
+  farmer: "Beekeeper",
+  aggregator: "Aggregator",
+};
+
 export const Login: React.FC = () => {
   const { user, isAuthenticated, login, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [identifier, setIdentifier] = useState("farmer@honeychain.io");
-  const [password, setPassword] = useState("Honey@123");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -73,7 +78,7 @@ export const Login: React.FC = () => {
         </div>
         <h1 className="text-3xl font-black text-[#1E4B7A] tracking-tight">HoneyChain</h1>
         <p className="mt-1 text-sm text-gray-600 font-medium">
-          National Honey Board & FSSAI Traceability Network
+          Beekeeping, Fraud Detection & Traceability Network
         </p>
       </div>
 
@@ -85,25 +90,27 @@ export const Login: React.FC = () => {
               Select Demo Persona (1-Click Login)
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(SEED_ACCOUNTS).map(([key, acc]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleQuickLogin(key)}
-                  disabled={submitting}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-[#D5DBD3] hover:border-[#1E4B7A] hover:bg-[#E6EDF5]/40 transition text-left group"
-                >
-                  <span className="text-xs font-bold text-[#1E4B7A] group-hover:underline capitalize">
-                    {key}
-                  </span>
-                  <span className="text-[11px] text-gray-600 font-medium truncate w-full">
-                    {acc.profile.name}
-                  </span>
-                  <span className="text-[10px] text-gray-400 truncate w-full">
-                    {acc.profile.org_name}
-                  </span>
-                </button>
-              ))}
+              {Object.entries(SEED_ACCOUNTS)
+                .filter(([key]) => key === "farmer" || key === "aggregator")
+                .map(([key, acc]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleQuickLogin(key)}
+                    disabled={submitting}
+                    className="flex flex-col items-start p-2.5 rounded-xl border border-[#D5DBD3] hover:border-[#1E4B7A] hover:bg-[#E6EDF5]/40 transition text-left group"
+                  >
+                    <span className="text-xs font-bold text-[#1E4B7A] group-hover:underline">
+                      {PERSONA_LABELS[key] || key}
+                    </span>
+                    <span className="text-[11px] text-gray-600 font-medium truncate w-full">
+                      {acc.profile.name}
+                    </span>
+                    <span className="text-[10px] text-gray-400 truncate w-full">
+                      {acc.profile.org_name}
+                    </span>
+                  </button>
+                ))}
             </div>
           </div>
 

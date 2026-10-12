@@ -4,11 +4,12 @@ import { HoneyCell, StatusChip } from "@honeychain/ui";
 import {
   AlertTriangle,
   Plus,
-  ChevronRight,
   TrendingUp,
   Layers,
   Sparkles,
-  ShieldAlert,
+  ShieldCheck,
+  Droplets,
+  Scale,
   X,
   CheckCircle2,
   RefreshCw,
@@ -27,6 +28,7 @@ export interface HiveItem {
   box_type?: string;
   frame_count?: number;
   harvest_ready?: boolean;
+  alert?: string;
 }
 
 export interface HiveAlert {
@@ -83,16 +85,6 @@ const defaultHives: HiveItem[] = [
   },
 ];
 
-const defaultAlerts: HiveAlert[] = [
-  {
-    id: "mite-alert",
-    type: "mite",
-    title: "(!) Watch: Hive #7 - Mite risk detected. Check the sticky board today.",
-    description: "Sensor telemetry detected abnormal vibration pattern.",
-    severity: "warning",
-  },
-];
-
 function formatHiveCode(code: string): string {
   if (code.startsWith("HV-")) {
     const num = code.replace("HV-", "").replace(/^0+/, "");
@@ -101,10 +93,8 @@ function formatHiveCode(code: string): string {
   return code;
 }
 
-export const HivesList: React.FC = () => {
-  const [hives, setHives] = useState<HiveItem[]>(defaultHives);
-  const [alerts] = useState<HiveAlert[]>(defaultAlerts);
-  const [syrupQuarantineActive] = useState(false);
+export const HivesList: React.FC<{ initialHives?: HiveItem[] }> = ({ initialHives }) => {
+  const [hives, setHives] = useState<HiveItem[]>(initialHives || defaultHives);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -118,6 +108,7 @@ export const HivesList: React.FC = () => {
 
   // Fetch live hives on mount with fallback to seed data
   useEffect(() => {
+    if (initialHives) return;
     let isMounted = true;
     const fetchHives = async () => {
       setLoading(true);
@@ -131,7 +122,7 @@ export const HivesList: React.FC = () => {
               rawCode: h.hive_code,
               code: formatHiveCode(h.hive_code || h.code || "Hive"),
               gain: h.gain_today || (h.gain_today_kg !== undefined ? `+${h.gain_today_kg} kg` : "+0.0 kg"),
-              gainKg: typeof h.gain_today_kg === "number" ? h.gain_today_kg : 0,
+              gainKg: typeof h.gain_today_kg === "number" ? h.gain_today_kg : (parseFloat(h.gain_today) || 0),
               status: h.status || "Healthy",
               fill: h.fill_pct ?? h.fill ?? 50,
               species: h.species || "Indian (Cerana)",
@@ -139,6 +130,7 @@ export const HivesList: React.FC = () => {
               box_type: h.box_type || "ISI_A",
               frame_count: h.frame_count || 8,
               harvest_ready: Boolean(h.harvest_ready),
+              alert: h.alert || h.alert_message || undefined,
             }));
             setHives(mapped);
           }
@@ -157,14 +149,42 @@ export const HivesList: React.FC = () => {
     };
   }, []);
 
+  // Dynamically compute active alerts directly from telemetry/hive status
+  const activeAlerts: HiveAlert[] = hives
+    .filter((h) => h.status === "Watch" || h.status === "Critical" || Boolean(h.alert))
+    .map((h) => ({
+      id: `alert-${h.id || h.code}`,
+      type: h.status === "Critical" ? ("swarm" as const) : ("mite" as const),
+      title: `(!) ${h.status}: ${h.code} - ${h.alert || "Telemetry anomaly flagged. Inspection recommended."}`,
+      description: `Sensor scale telemetry detected abnormal status on ${h.species}.`,
+      severity: h.status === "Critical" ? ("critical" as const) : ("warning" as const),
+    }));
+
   // Compute stats for KPI cards
   const activeHivesCount = hives.length;
   const totalGainNumber = hives.reduce((sum, h) => {
     if (typeof h.gainKg === "number") return sum + h.gainKg;
-    const match = h.gain.match(/([0-9.]+)/);
+    const match = h.gain?.match(/([0-9.]+)/);
     return sum + (match ? parseFloat(match[1]) : 0);
   }, 0);
-  const totalGainString = `+${(totalGainNumber > 0 ? totalGainNumber : 3.8).toFixed(1)} kg today`;
+  const totalGainString = `+${totalGainNumber.toFixed(1)} kg today`;
+
+  // Calculate average daily gain across hives for Forage Flow Status
+  const avgGainKg = hives.length > 0 ? totalGainNumber / hives.length : 0;
+  let forageTitle = "Maintenance Flow";
+  let forageSubtitle = "Colonies consuming reserves";
+  if (hives.length > 0) {
+    if (avgGainKg >= 1.0) {
+      forageTitle = "High Nectar Flow";
+      forageSubtitle = "Peak comb accumulation";
+    } else if (avgGainKg >= 0.3) {
+      forageTitle = "Moderate Nectar Flow";
+      forageSubtitle = "Steady comb filling";
+    }
+  }
+
+  // Ready for Harvest detection
+  const readyHive = hives.find((h) => h.harvest_ready);
 
   const handleCreateHive = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,13 +215,15 @@ export const HivesList: React.FC = () => {
           rawCode: created.hive_code,
           code: formatHiveCode(created.hive_code),
           gain: created.gain_today || "+0.0 kg",
-          gainKg: created.gain_today_kg || 0,
+          gainKg: typeof created.gain_today_kg === "number" ? created.gain_today_kg : 0,
           status: created.status || "Healthy",
           fill: created.fill_pct ?? 0,
           species: created.species || newSpecies,
           weight: created.current_weight_kg || 15.0,
           box_type: created.box_type || newBoxType,
           frame_count: created.frame_count || newFrameCount,
+          harvest_ready: Boolean(created.harvest_ready),
+          alert: created.alert || undefined,
         };
         setHives((prev) => [newHiveItem, ...prev]);
         setFeedbackMsg(`Hive ${newHiveItem.code} successfully registered!`);
@@ -219,6 +241,7 @@ export const HivesList: React.FC = () => {
           weight: 15.0,
           box_type: newBoxType,
           frame_count: newFrameCount,
+          harvest_ready: false,
         };
         setHives((prev) => [localItem, ...prev]);
         setFeedbackMsg(`Hive ${localItem.code} registered locally.`);
@@ -236,6 +259,7 @@ export const HivesList: React.FC = () => {
         weight: 15.0,
         box_type: newBoxType,
         frame_count: newFrameCount,
+        harvest_ready: false,
       };
       setHives((prev) => [localItem, ...prev]);
       setFeedbackMsg(`Hive ${localItem.code} registered locally.`);
@@ -262,10 +286,10 @@ export const HivesList: React.FC = () => {
         </div>
       )}
 
-      {/* Active Alert Banners */}
-      {alerts.length > 0 || syrupQuarantineActive ? (
+      {/* Dynamic Active Alert Banners (only displayed when dynamic alerts exist) */}
+      {activeAlerts.length > 0 && (
         <div className="space-y-3">
-          {alerts.map((a) => (
+          {activeAlerts.map((a) => (
             <div
               key={a.id}
               className={`p-4 rounded-2xl shadow-xs flex items-start gap-3 border-l-4 ${
@@ -291,20 +315,8 @@ export const HivesList: React.FC = () => {
               </div>
             </div>
           ))}
-
-          {syrupQuarantineActive && (
-            <div className="p-4 bg-[#FBE3E0] border-l-4 border-[#B3261E] rounded-2xl text-[#B3261E] shadow-xs flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-[#B3261E]" />
-              <div>
-                <div className="font-bold text-sm">(!) Quarantine: Batch HC-0421 Locked</div>
-                <div className="text-xs text-[#B3261E]/90 mt-1">
-                  Syrup fraud risk flagged by yield ratio validator. Custody transfers frozen until lab clearance.
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      ) : null}
+      )}
 
       {/* KPI Cards on Desktop / Responsive Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -345,8 +357,8 @@ export const HivesList: React.FC = () => {
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-base font-extrabold text-[#1C2430]">Strong Spring Flow</div>
-            <p className="text-[11px] text-gray-500 mt-0.5">Acacia & Tamarind peak bloom</p>
+            <div className="text-base font-extrabold text-[#1C2430]">{forageTitle}</div>
+            <p className="text-[11px] text-gray-500 mt-0.5">{forageSubtitle}</p>
           </div>
         </div>
 
@@ -356,7 +368,7 @@ export const HivesList: React.FC = () => {
             <span className="text-xs font-bold uppercase tracking-wider">Active Alerts</span>
             <div
               className={`p-2 rounded-xl ${
-                alerts.length > 0 ? "bg-[#FBE3E0] text-[#B3261E]" : "bg-[#E1F1E8] text-[#1E7B4C]"
+                activeAlerts.length > 0 ? "bg-[#FBE3E0] text-[#B3261E]" : "bg-[#E1F1E8] text-[#1E7B4C]"
               }`}
             >
               <AlertTriangle className="w-4 h-4" />
@@ -365,13 +377,13 @@ export const HivesList: React.FC = () => {
           <div className="mt-2">
             <div
               className={`text-2xl font-black ${
-                alerts.length > 0 ? "text-[#B3261E]" : "text-[#1E7B4C]"
+                activeAlerts.length > 0 ? "text-[#B3261E]" : "text-[#1E7B4C]"
               }`}
             >
-              {alerts.length}
+              {activeAlerts.length}
             </div>
             <p className="text-[11px] text-gray-500 mt-0.5">
-              {alerts.length > 0 ? "Inspect flagged colonies" : "All hives in nominal ranges"}
+              {activeAlerts.length > 0 ? "Inspect flagged colonies" : "All colonies healthy & nominal"}
             </p>
           </div>
         </div>
@@ -381,13 +393,15 @@ export const HivesList: React.FC = () => {
       <div className="bg-gradient-to-r from-[#E6EDF5] to-white p-5 rounded-2xl border border-[#1E4B7A]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
         <div>
           <div className="text-xs font-bold text-[#1E4B7A] uppercase tracking-wider">
-            Ready for Harvest
+            {readyHive ? "Ready for Harvest" : "Apiary Status"}
           </div>
           <div className="text-base font-bold text-[#1C2430] mt-0.5">
-            Batch HC-0421 Extraction Ready
+            {readyHive ? `${readyHive.code} Extraction Ready` : "Apiary in Production Phase"}
           </div>
           <p className="text-xs text-gray-500 mt-0.5">
-            Apiary yields meet minimum capping and moisture criteria.
+            {readyHive
+              ? `Comb capping exceeds 75% threshold (+${readyHive.gain} allowable yield).`
+              : "Honey supers actively ripening. All colonies currently below extraction weight."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -398,12 +412,14 @@ export const HivesList: React.FC = () => {
             <Plus className="w-3.5 h-3.5" />
             <span>Add Hive</span>
           </button>
-          <Link
-            to="/farmer/harvest"
-            className="px-4 py-2 bg-white text-[#1E4B7A] border border-[#1E4B7A]/30 text-xs font-bold rounded-xl hover:bg-[#E6EDF5] transition"
-          >
-            Start Harvest
-          </Link>
+          {readyHive && (
+            <Link
+              to={`/farmer/harvest?hive=${encodeURIComponent(readyHive.rawCode || readyHive.code)}`}
+              className="px-4 py-2 bg-white text-[#1E4B7A] border border-[#1E4B7A]/30 text-xs font-bold rounded-xl hover:bg-[#E6EDF5] transition"
+            >
+              Start Harvest
+            </Link>
+          )}
           <Link
             to="/farmer/batches/new"
             className="px-4 py-2 bg-[#1E4B7A] text-white text-xs font-bold rounded-xl hover:bg-[#163A5F] transition flex items-center gap-1.5"
@@ -414,6 +430,64 @@ export const HivesList: React.FC = () => {
         </div>
       </div>
 
+      {/* Honey Purity & Fraud Prevention Trust Badges */}
+      <div className="bg-white border border-[#D5DBD3] rounded-2xl p-4 sm:p-5 shadow-xs">
+        <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3.5">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-[#E1F1E8] text-[#1E7B4C] rounded-lg">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-[#1C2430] uppercase tracking-wider">
+                Honey Purity &amp; Fraud Prevention
+              </h3>
+              <p className="text-[11px] text-gray-500">Automated cryptographic &amp; biological integrity protections</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold text-[#1E7B4C] bg-[#E1F1E8] px-2.5 py-0.5 rounded-full border border-[#1E7B4C]/20 uppercase tracking-wider">
+            Guards Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="p-3 bg-[#F9FAF9] border border-[#E2E8F0] rounded-xl flex items-start gap-2.5">
+            <div className="p-1.5 bg-emerald-50 text-emerald-700 rounded-lg shrink-0 mt-0.5">
+              <ShieldCheck className="w-4 h-4 text-[#1E7B4C]" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-[#1C2430]">Yield Ratio Validator</div>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Prevents sugar syrup feeding (PRD Section 8.1)
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3 bg-[#F9FAF9] border border-[#E2E8F0] rounded-xl flex items-start gap-2.5">
+            <div className="p-1.5 bg-sky-50 text-sky-700 rounded-lg shrink-0 mt-0.5">
+              <Droplets className="w-4 h-4 text-[#1E4B7A]" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-[#1C2430]">Moisture Adulteration Guard</div>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Enforces FSSAI &le; 20.0% threshold
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3 bg-[#F9FAF9] border border-[#E2E8F0] rounded-xl flex items-start gap-2.5">
+            <div className="p-1.5 bg-amber-50 text-amber-700 rounded-lg shrink-0 mt-0.5">
+              <Scale className="w-4 h-4 text-[#A94F00]" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-[#1C2430]">Cryptographic Weight Attestation</div>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Tamper-evident scale log chain
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Hives List Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -421,7 +495,7 @@ export const HivesList: React.FC = () => {
             <h2 className="text-sm font-bold text-[#1C2430] uppercase tracking-wider">
               Active Apiary Hives ({hives.length} active)
             </h2>
-            <p className="text-xs text-gray-500">Live scale weight telemetry & comb fill status</p>
+            <p className="text-xs text-gray-500">Live scale weight telemetry &amp; comb fill status</p>
           </div>
           <div className="flex items-center gap-2">
             {loading && <RefreshCw className="w-3.5 h-3.5 text-gray-400 animate-spin" />}

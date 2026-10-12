@@ -9,8 +9,6 @@ import { HivesList } from "./routes/farmer/HivesList";
 import { CreateBatch } from "./routes/farmer/CreateBatch";
 import { HarvestWizard } from "./routes/farmer/HarvestWizard";
 import { AggregatorDashboard } from "./routes/aggregator/AggregatorDashboard";
-import { LabPortal } from "./routes/lab/LabPortal";
-import { RegulatorDashboard } from "./routes/regulator/RegulatorDashboard";
 import { VerifyJar } from "./routes/verify/VerifyJar";
 
 export {
@@ -20,9 +18,8 @@ export {
   CreateBatch,
   HarvestWizard,
   AggregatorDashboard,
-  LabPortal,
-  RegulatorDashboard,
   VerifyJar,
+  getRoleHomePath,
 };
 
 // Root route handler: redirects authenticated user to role home, otherwise to /login
@@ -137,50 +134,6 @@ export const AppRoutes: React.FC = () => {
           <ProtectedRoute allowedRoles={["aggregator"]}>
             <AppLayout title="Aggregator Intake">
               <AggregatorDashboard />
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Lab Routes */}
-      <Route
-        path="/lab"
-        element={
-          <ProtectedRoute allowedRoles={["lab"]}>
-            <AppLayout title="Lab Testing Portal">
-              <LabPortal />
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/lab/reports"
-        element={
-          <ProtectedRoute allowedRoles={["lab"]}>
-            <AppLayout title="Lab Testing Portal">
-              <LabPortal />
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Regulator Routes */}
-      <Route
-        path="/regulator"
-        element={
-          <ProtectedRoute allowedRoles={["regulator"]}>
-            <AppLayout title="Regulator & KVK Audit">
-              <RegulatorDashboard />
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/regulator/audit"
-        element={
-          <ProtectedRoute allowedRoles={["regulator"]}>
-            <AppLayout title="Regulator & KVK Audit">
-              <RegulatorDashboard />
             </AppLayout>
           </ProtectedRoute>
         }
