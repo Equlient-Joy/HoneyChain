@@ -303,3 +303,72 @@ authRoutes.post("/auth/logout", (c) => {
   }
   return c.json({ status: "ok" });
 });
+
+export const ID_ALIASES: Record<string, string> = {
+  "BK-001": "farmer@honeychain.io",
+  "FARMER": "farmer@honeychain.io",
+  "AG-001": "aggregator@honeychain.io",
+  "AGGREGATOR": "aggregator@honeychain.io",
+  "LAB-001": "lab@honeychain.io",
+  "LAB": "lab@honeychain.io",
+  "REG-001": "regulator@honeychain.io",
+  "REGULATOR": "regulator@honeychain.io",
+};
+
+// GET /auth/resolve/:id
+authRoutes.get("/auth/resolve/:id", (c) => {
+  const rawId = c.req.param("id").toUpperCase();
+  const normalizedIdentifier = ID_ALIASES[rawId] || rawId.toLowerCase();
+
+  const user = Array.from(userStore.values()).find(
+    (u) =>
+      (u.email && u.email.toLowerCase() === normalizedIdentifier) ||
+      (u.email && u.email.toLowerCase() === rawId.toLowerCase()) ||
+      u.phone === normalizedIdentifier ||
+      u.phone === rawId ||
+      u.id.toLowerCase() === normalizedIdentifier ||
+      u.id.toLowerCase() === rawId.toLowerCase()
+  );
+
+  if (!user) {
+    return c.json(
+      {
+        error: "USER_NOT_FOUND",
+        message: `No active user profile associated with ID '${rawId}'.`,
+      },
+      404
+    );
+  }
+
+  const token = generateToken(user.id);
+
+  const targetUi =
+    user.role === "farmer"
+      ? "/farmer/hives"
+      : user.role === "aggregator"
+      ? "/aggregator"
+      : user.role === "lab"
+      ? "/lab"
+      : user.role === "regulator"
+      ? "/regulator"
+      : "/aggregator";
+
+  return c.json(
+    {
+      status: "RESOLVED",
+      token,
+      target_ui: targetUi,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        org_id: user.org_id,
+        org_name: user.org_name,
+        org_district: user.org_district,
+      },
+    },
+    200
+  );
+});
