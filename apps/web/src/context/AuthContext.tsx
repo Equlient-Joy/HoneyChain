@@ -19,6 +19,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithId: (id: string) => Promise<{ success: boolean; targetUi?: string; error?: string }>;
   signup: (data: any) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
@@ -287,9 +288,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       try {
         localStorage.removeItem("honeychain_auth_token");
         localStorage.removeItem("honeychain_auth_user");
+        localStorage.removeItem("honeychain_user_profile");
       } catch {}
     }
   }, [token]);
+
+  const loginWithId = async (rawId: string) => {
+    const upper = rawId.trim().toUpperCase();
+    // Offline fallback aliases
+    if (upper === "BK-001" || upper === "FARMER") {
+      const profile = SEED_ACCOUNTS.farmer.profile;
+      setUser(profile);
+      setToken("mock-token-farmer");
+      if (typeof localStorage !== "undefined") {
+        try {
+          localStorage.setItem("honeychain_auth_token", "mock-token-farmer");
+          localStorage.setItem("honeychain_auth_user", JSON.stringify(profile));
+          localStorage.setItem("honeychain_user_profile", JSON.stringify(profile));
+        } catch {}
+      }
+      return { success: true, targetUi: "/farmer/hives" };
+    }
+    if (upper === "AG-001" || upper === "AGGREGATOR") {
+      const profile = SEED_ACCOUNTS.aggregator.profile;
+      setUser(profile);
+      setToken("mock-token-aggregator");
+      if (typeof localStorage !== "undefined") {
+        try {
+          localStorage.setItem("honeychain_auth_token", "mock-token-aggregator");
+          localStorage.setItem("honeychain_auth_user", JSON.stringify(profile));
+          localStorage.setItem("honeychain_user_profile", JSON.stringify(profile));
+        } catch {}
+      }
+      return { success: true, targetUi: "/aggregator" };
+    }
+
+    // Live backend call
+    try {
+      const res = await fetch(`/api/v1/auth/resolve/${encodeURIComponent(rawId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        setToken(data.token);
+        if (typeof localStorage !== "undefined") {
+          try {
+            localStorage.setItem("honeychain_auth_token", data.token);
+            localStorage.setItem("honeychain_auth_user", JSON.stringify(data.user));
+            localStorage.setItem("honeychain_user_profile", JSON.stringify(data.user));
+          } catch {}
+        }
+        return { success: true, targetUi: data.target_ui };
+      }
+      return { success: false, error: "Invalid ID. Use BK-001 or AG-001." };
+    } catch {
+      return { success: false, error: "Network error resolving ID." };
+    }
+  };
 
   const value: AuthContextType = {
     user,
@@ -297,6 +351,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     isAuthenticated: Boolean(user && token),
     isLoading,
     login,
+    loginWithId,
     signup,
     logout,
   };

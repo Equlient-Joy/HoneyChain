@@ -10,10 +10,12 @@ import { CreateBatch } from "./routes/farmer/CreateBatch";
 import { HarvestWizard } from "./routes/farmer/HarvestWizard";
 import { AggregatorDashboard } from "./routes/aggregator/AggregatorDashboard";
 import { VerifyJar } from "./routes/verify/VerifyJar";
+import { IdPortal } from "./routes/portal/IdPortal";
 
 export {
   Signup,
   Login,
+  IdPortal,
   HivesList,
   CreateBatch,
   HarvestWizard,
@@ -51,9 +53,10 @@ export const AppRoutes: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/verify" element={<VerifyJar />} />
+      <Route path="/portal" element={<IdPortal />} />
 
       {/* Root Home Route */}
-      <Route path="/" element={<RootRedirect />} />
+      <Route path="/" element={<IdPortal />} />
 
       {/* Farmer Routes */}
       <Route
