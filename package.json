@@ -9,11 +9,12 @@
     "tools/*"
   ],
   "scripts": {
+    "dev": "concurrently -n \"api,web\" -c \"blue,green\" \"bun run dev:api\" \"bun run dev:web\"",
     "dev:api": "bun --watch apps/api/src/index.ts",
     "dev:web": "bun --filter @honeychain/web dev",
-    "build:web": "bun --filter @honeychain/web build",
-    "dev": "concurrently -n \"api,web\" -c \"blue,green\" \"bun run dev:api\" \"bun run dev:web\"",
     "build": "bun --filter \"*\" build",
+    "build:web": "bun --filter @honeychain/web build",
+    "start": "bun apps/api/src/index.ts",
     "test": "bun test",
     "test:scenarios": "bun run tools/scenarios/run.ts",
     "seed": "bun run tools/seed.ts"
